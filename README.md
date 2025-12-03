@@ -21,12 +21,13 @@ python -m src.agentic_business_research.cli "AI automations for real estate agen
 
 
 
-2. **Add `requirements.txt`** if you haven’t:
+### 2. **Add `requirements.txt`** if you haven’t:
 
 ```text
 openai>=1.40.0
 python-dotenv>=1.0.1
 
+### 3. Commit & push
 
 git status
 git add src docs README.md requirements.txt
