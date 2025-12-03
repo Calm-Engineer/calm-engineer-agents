@@ -1,0 +1,8 @@
+# 1) Real estate teams
+python -m src.agentic_business_research.cli "AI automations for real estate teams" --audience "small real estate teams in Canada" --out reports\teams.json
+
+# 2) Solo agents
+python -m src.agentic_business_research.cli "AI automations for solo realtors" --audience "solo agents in Ontario" --out reports\solo_agents.json
+
+# 3) Property managers
+python -m src.agentic_business_research.cli "AI for property management" --audience "small property management companies" --out reports\property_mgmt.json
