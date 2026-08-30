@@ -64,6 +64,14 @@ def main() -> None:
             print(f"   Difficulty: {o.get('difficulty')}")
         print()
 
+    sources = report.get("sources", [])
+    print("\nSources:")
+    if sources:
+        for i, s in enumerate(sources, start=1):
+            print(f"{i}. {s.get('title')} — {s.get('url')}")
+    else:
+        print("  (none — web search returned no results)")
+
     if args.out:
         args.out.write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(f"\nSaved full JSON report to {args.out}")

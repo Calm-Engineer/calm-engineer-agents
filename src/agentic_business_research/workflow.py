@@ -2,10 +2,17 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+import os
+import sys
+from typing import Any, Dict, List
+
+import requests
 
 from .config import Settings, get_client
 from .prompts import BASE_SYSTEM_PROMPT, build_user_prompt
+
+
+PERPLEXITY_SEARCH_URL = "https://api.perplexity.ai/search"
 
 
 BUSINESS_RESEARCH_SCHEMA: Dict[str, Any] = {
@@ -62,6 +69,18 @@ BUSINESS_RESEARCH_SCHEMA: Dict[str, Any] = {
                 },
             },
             "execution_notes": {"type": "string"},
+            "sources": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "url": {"type": "string"},
+                        "title": {"type": "string"},
+                    },
+                    "required": ["url", "title"],
+                },
+            },
         },
         "required": [
             "niche",
@@ -70,9 +89,37 @@ BUSINESS_RESEARCH_SCHEMA: Dict[str, Any] = {
             "market_signals",
             "offer_ideas",
             "execution_notes",
+            "sources",
         ],
     },
 }
+
+
+def perplexity_search(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
+    """
+    Call Perplexity's Search API and return the raw result dicts
+    (each with at least "title" and "url").
+    Expects PERPLEXITY_API_KEY in the environment.
+    """
+    api_key = os.getenv("PERPLEXITY_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "PERPLEXITY_API_KEY is not set. Get a key at "
+            "https://www.perplexity.ai/settings/api and export it."
+        )
+
+    response = requests.post(
+        PERPLEXITY_SEARCH_URL,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json={"query": query, "max_results": max_results},
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    return data.get("results", [])
 
 
 def run_business_research(
@@ -88,11 +135,29 @@ def run_business_research(
     settings = Settings()
     client = get_client()
 
+    search_query = f"{niche} {audience}" if audience else niche
+    try:
+        raw_results = perplexity_search(search_query, max_results=5)
+    except (RuntimeError, requests.RequestException) as exc:
+        print(
+            f"Warning: Perplexity search unavailable ({exc}); "
+            "continuing without web grounding.",
+            file=sys.stderr,
+        )
+        raw_results = []
+
+    sources = [
+        {"url": r["url"], "title": r.get("title", "")}
+        for r in raw_results[:5]
+        if r.get("url")
+    ]
+
     user_prompt = build_user_prompt(
         niche=niche,
         audience=audience,
         geography=geography,
         constraints=constraints,
+        sources=raw_results[:5],
     )
 
     response = client.chat.completions.create(
@@ -110,4 +175,8 @@ def run_business_research(
     )
 
     content = response.choices[0].message.content
-    return json.loads(content)
+    result = json.loads(content)
+    # Overwrite whatever the model produced for "sources" with the actual
+    # search results used, so this field can never contain invented links.
+    result["sources"] = sources
+    return result

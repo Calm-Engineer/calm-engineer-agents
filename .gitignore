@@ -6,6 +6,7 @@ __pycache__/
 *.cache
 env/
 venv/
+.venv/
 .ipynb_checkpoints/
 .DS_Store
 reports/*.json
