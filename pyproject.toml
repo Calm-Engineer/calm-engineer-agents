@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["archive", "notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Pre-existing unsorted imports. Fixed in a follow-up PR that also formats src/,
+# after which these entries are removed and `ruff format --check` is enabled in CI.
+"src/agentic_business_research/config.py" = ["I001"]
+"src/agentic_business_research/workflow.py" = ["I001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
