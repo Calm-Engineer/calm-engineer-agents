@@ -58,3 +58,7 @@ Optional flags:
 - `--out` — path to save the full JSON report, e.g. `--out reports/dentists.json`
 
 See [`docs/examples.md`](docs/examples.md) for more example commands. Generated JSON reports are written to `reports/` and are git-ignored.
+
+## Development workflow
+
+See [`docs/policy-stub.md`](docs/policy-stub.md) for the checks CI runs today and [`tasks/`](tasks/README.md) for the task conventions.

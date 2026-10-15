@@ -10,3 +10,6 @@ venv/
 .ipynb_checkpoints/
 .DS_Store
 reports/*.json
+.env*
+.claude/worktrees/
+.pytest_cache/
