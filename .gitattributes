@@ -1,0 +1,3 @@
+# Keep task specs LF on every platform so the SPEC sha256 is stable
+# across Windows and Linux checkouts.
+tasks/**/*.md text eol=lf

@@ -1,0 +1,128 @@
+# spec-lock: the required check that keeps an approved SPEC.md immutable.
+#
+# This runs the default branch's copy of this workflow and its scripts. PR code is never
+# fetched, checked out or executed; PR content is read only through the REST API. PR-derived
+# values reach the scripts as environment variables only, never inside a `run:` block.
+#
+# SETUP, before this workflow is merged: create the `spec-approval` environment with the owner
+# as required reviewer. If the environment does not exist, GitHub creates it with no protection
+# rules and the `approval` job passes with no human click. The spec-lock job therefore also
+# verifies a real "approved" review record for this run (see require_approval in reviewlib.py).
+name: spec-lock
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: spec-lock-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      kind: ${{ steps.classify.outputs.kind }}
+    steps:
+      - name: Require python3 >= 3.9
+        run: |
+          python3 --version
+          python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'
+      - name: Require the default branch as the PR base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: '[ -n "$DEFAULT_BRANCH" ] && [ "$BASE_REF" = "$DEFAULT_BRANCH" ]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+      - name: Classify the pull request
+        id: classify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 -B .github/scripts/spec_lock.py classify
+
+  approval:
+    needs: classify
+    if: needs.classify.outputs.kind == 'spec-only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: spec-approval
+    permissions: {}
+    steps:
+      - run: echo "spec-approval granted for this run"
+
+  spec-lock:
+    needs: [classify, approval]
+    if: always() && github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # UNVERIFIED: `actions: read` is expected to be needed for the run-approvals endpoint
+      # (GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals). GitHub's docs name no
+      # token permission for it. Test on a throwaway PR; drop this line if it is not needed.
+      actions: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Require python3 >= 3.9
+        run: |
+          python3 --version
+          python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'
+      - name: Require the default branch as the PR base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: '[ -n "$DEFAULT_BRANCH" ] && [ "$BASE_REF" = "$DEFAULT_BRANCH" ]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+      - name: Check the SPEC lock
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+          CLASSIFY_RESULT: ${{ needs.classify.result }}
+          CLASSIFY_KIND: ${{ needs.classify.outputs.kind }}
+          APPROVAL_RESULT: ${{ needs.approval.result }}
+        run: python3 -B .github/scripts/spec_lock.py check
+
+  dry-run:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Require python3 >= 3.9
+        run: |
+          python3 --version
+          python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'
+      - name: Require a run from the default branch
+        env:
+          RUN_REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: '[ "$RUN_REF" = "$DEFAULT_REF" ]'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            .github/scripts
+            tests/fixtures
+          persist-credentials: false
+      - name: Run the fixture cases (offline; no token passed to the script)
+        run: python3 -B .github/scripts/spec_lock.py dry-run
