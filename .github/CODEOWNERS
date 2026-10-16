@@ -1,0 +1,6 @@
+# Routing only: this file requests reviews from the owner. It enforces nothing.
+# The ruleset will not require code owner review, because a solo owner cannot
+# approve their own pull request.
+/.github/            @Calm-Engineer
+/tasks/*/SPEC.md     @Calm-Engineer
+/docs/policy-stub.md @Calm-Engineer

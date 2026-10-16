@@ -1,0 +1,172 @@
+[
+  {
+    "name": "valid implementation PR",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-001\nbranch: task/AGT-001-baseline\nspec_sha256: {SPEC_SHA256}\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n\n# Status log\n"},
+    "expect": "pass", "expect_text": "SPEC hash matches"
+  },
+  {
+    "name": "implementation edits SPEC",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/SPEC.md"],
+    "expect": "fail", "expect_text": "modifies a SPEC.md"
+  },
+  {
+    "name": "implementation edits SPEC, different casing",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "Tasks/AGT-001/Spec.md"],
+    "expect": "fail", "expect_text": "modifies a SPEC.md"
+  },
+  {
+    "name": "implementation renames SPEC away",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", ["tasks/AGT-001/OLD.md", "tasks/AGT-001/SPEC.md"]],
+    "expect": "fail", "expect_text": "modifies a SPEC.md"
+  },
+  {
+    "name": "hash mismatch",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-001\nbranch: task/AGT-001-baseline\nspec_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n"},
+    "expect": "fail", "expect_text": "does not match"
+  },
+  {
+    "name": "empty spec_sha256 (unfilled template)",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-001\nbranch: task/AGT-001-baseline\nspec_sha256: \"\"\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n"},
+    "expect": "fail", "expect_text": "spec_sha256 is empty"
+  },
+  {
+    "name": "base SPEC is a draft",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: draft\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-001\nbranch: task/AGT-001-baseline\nspec_sha256: {SPEC_SHA256}\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n"},
+    "expect": "fail", "expect_text": "not status: approved"
+  },
+  {
+    "name": "base SPEC absent, implementation",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-001\nbranch: task/AGT-001-baseline\nspec_sha256: {SPEC_SHA256}\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n"},
+    "expect": "fail", "expect_text": "absence is only allowed"
+  },
+  {
+    "name": "base SPEC read error (500), implementation",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec_error": true,
+    "expect": "fail", "expect_text": "cannot read the base SPEC"
+  },
+  {
+    "name": "TASK.md missing at head",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "expect": "fail", "expect_text": "cannot read TASK.md"
+  },
+  {
+    "name": "TASK.md id differs from folder",
+    "ref": "task/AGT-001-baseline",
+    "files": ["src/a.py", "tasks/AGT-001/TASK.md"],
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/TASK.md": "---\nid: AGT-002\nbranch: task/AGT-002-other\nspec_sha256: {SPEC_SHA256}\nbase_sha: \"\"\nhead_sha: \"\"\nstatus: in-progress\n---\n"},
+    "expect": "fail", "expect_text": "id does not match"
+  },
+  {
+    "name": "spec-only, approved, brand-new SPEC",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "success",
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n"},
+    "expect": "pass", "expect_text": "approved via spec-approval"
+  },
+  {
+    "name": "spec-only, approved, edits an existing SPEC",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "success",
+    "base_spec": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n",
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec, revised.\n"},
+    "expect": "pass", "expect_text": "approved via spec-approval"
+  },
+  {
+    "name": "spec-only, head SPEC id differs from folder",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "success",
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-002\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n\n# Goal\n\nFixture spec.\n"},
+    "expect": "fail", "expect_text": "SPEC at head is invalid"
+  },
+  {
+    "name": "spec-only, approval skipped",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "skipped",
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n"},
+    "expect": "fail", "expect_text": "waiting for spec-approval"
+  },
+  {
+    "name": "spec-only, approval failed",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "failure",
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n"},
+    "expect": "fail", "expect_text": "waiting for spec-approval"
+  },
+  {
+    "name": "spec-only, approved but no review record",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "success",
+    "approval_record": false,
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n"},
+    "expect": "fail", "expect_text": "no verified spec-approval record"
+  },
+  {
+    "name": "spec-only, base SPEC read error (500)",
+    "ref": "spec/AGT-001",
+    "files": ["tasks/AGT-001/SPEC.md"],
+    "approval": "success",
+    "base_spec_error": true,
+    "head": {"tasks/AGT-001/SPEC.md": "---\nid: AGT-001\nrisk_tier: med\nstatus: approved\nowner: Calm-Engineer\ncontext_files: []\n---\n"},
+    "expect": "fail", "expect_text": "cannot read the base SPEC"
+  },
+  {
+    "name": "docs-only PR, no task",
+    "ref": "docs/fix-typo",
+    "files": ["docs/README.md", "README.md"],
+    "expect": "pass", "expect_text": "not required"
+  },
+  {
+    "name": "src change with no task",
+    "ref": "feature/x",
+    "files": ["src/a.py"],
+    "expect": "fail", "expect_text": "need a tasks/<ID>/ folder"
+  },
+  {
+    "name": ".github-only PR (invalid in PR2a)",
+    "ref": "chore/ci",
+    "files": [".github/workflows/ci.yml"],
+    "expect": "fail", "expect_text": "need a tasks/<ID>/ folder"
+  },
+  {
+    "name": "fork PR",
+    "ref": "task/AGT-001-baseline",
+    "fork": true,
+    "files": ["docs/README.md"],
+    "expect": "fail", "expect_text": "fork pull request"
+  },
+  {
+    "name": "head SHA differs from the event SHA",
+    "ref": "task/AGT-001-baseline",
+    "files": ["docs/README.md"],
+    "event_head_sha": "2222222222222222222222222222222222222222",
+    "expect": "fail", "expect_text": "differs from the event head"
+  }
+]
