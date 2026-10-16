@@ -709,6 +709,58 @@ def test_no_task_allowlist_rejects(files):
     assert "tasks/<ID>/" in result.reason
 
 
+def test_no_task_allowlist_is_pinned():
+    """Pins today's allowlist. Changing the rule must be a deliberate edit of this test."""
+    assert lib._NO_TASK_OK_RE.pattern == (
+        r"docs/.+|[^/]+\.md|\.gitignore|\.gitattributes|tasks/_template/.+"
+    )
+    accepted = [
+        # anything under docs/, whatever the type (the rule is about where, not what)
+        "docs/a.md",
+        "docs/sub/dir/x.png",
+        "docs/script.py",
+        "docs/workflow.yml",
+        # any root-level .md, including agent-instruction files (plan risk 8)
+        "README.md",
+        "CHANGELOG.md",
+        "CLAUDE.md",
+        "AGENTS.md",
+        "GEMINI.md",
+        # two root config files (plan risk 9)
+        ".gitignore",
+        ".gitattributes",
+        # the task templates
+        "tasks/_template/SPEC.md",
+        "tasks/_template/TASK.md",
+        "tasks/_template/new.txt",
+    ]
+    rejected = [
+        "",
+        "src/a.py",
+        "tests/test_x.py",
+        "requirements.txt",
+        "requirements-dev.txt",
+        "pyproject.toml",
+        "setup.py",
+        "notes.txt",
+        "LICENSE",
+        ".github/workflows/ci.yml",
+        ".github/CODEOWNERS",
+        "tasks/README.md",
+        "tasks/AGT-001/SPEC.md",
+        "Docs/a.md",
+        "README.MD",
+        "docs",
+        "docs/",
+        "sub/README.md",
+        "src/.gitignore",
+        "docs/../src/x.py",
+        "tasks/_TEMPLATE/SPEC.md",
+    ]
+    assert [p for p in accepted if not lib._no_task_allowed(p)] == []
+    assert [p for p in rejected if lib._no_task_allowed(p)] == []
+
+
 def test_template_folder_is_exempt_from_the_spec_rule():
     result = classify("chore/x", ["tasks/_template/SPEC.md"])
     assert result.kind == lib.NO_TASK
