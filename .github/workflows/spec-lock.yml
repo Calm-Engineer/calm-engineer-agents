@@ -43,9 +43,7 @@ jobs:
         run: '[ -n "$DEFAULT_BRANCH" ] && [ "$BASE_REF" = "$DEFAULT_BRANCH" ]'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: |
-            .github/scripts
-            tests/fixtures
+          sparse-checkout: .github/scripts
           persist-credentials: false
       - name: Classify the pull request
         id: classify
@@ -90,9 +88,7 @@ jobs:
         run: '[ -n "$DEFAULT_BRANCH" ] && [ "$BASE_REF" = "$DEFAULT_BRANCH" ]'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: |
-            .github/scripts
-            tests/fixtures
+          sparse-checkout: .github/scripts
           persist-credentials: false
       - name: Check the SPEC lock
         env:
