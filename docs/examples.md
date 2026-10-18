@@ -12,3 +12,4 @@ python -m src.agentic_business_research.cli "AI automations for solo realtors" -
 # 3) Property managers
 python -m src.agentic_business_research.cli "AI for property management" --audience "small property management companies" --out reports/property_mgmt.json
 ```
+<!-- throwaway test 2: non-spec file, do not merge -->
