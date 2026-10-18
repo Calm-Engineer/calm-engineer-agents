@@ -62,3 +62,4 @@ Each criterion is checkable by a test or by inspection.
 - Changing the set of lint rules, the line length, or adding type checking.
 - Any dependency change, or any behaviour change in `src/`.
 - The spec-lock and reviewer work (PR2a, PR2b).
+<!-- throwaway test 4: spec-only change, do not merge -->
